@@ -1,17 +1,5 @@
-## Running React on Replit
+md<br> ## Chat-Coach MVP<br> **Product Promise (1 paragraph)** <br> “For [people who track meals & workouts through chat], Chat-Coach is a lightweight web app that feels like texting your own assistant. Log a meal or workout in one line and get instant macro & KPI feedback—no spreadsheets, no clunky fitness UI.”<br>
 
-[React](https://reactjs.org/) is a popular JavaScript library for building user interfaces.
+md<br> ### Day-7 Launch Must-Haves<br> 1. Log a meal (`/log meal 3 eggs and oatmeal`).<br> 2. Log a workout (`/log workout bench 5x5 185`).<br> 3. Ask progress (`/summary today`).<br> 4. Download daily PDF report.<br>
 
-[Vite](https://vitejs.dev/) is a blazing fast frontend build tool that includes features like Hot Module Reloading (HMR), optimized builds, and TypeScript support out of the box.
-
-Using the two in conjunction is one of the fastest ways to build a web app.
-
-### Getting Started
-- Hit run
-- Edit [App.jsx](#src/App.jsx) and watch it live update!
-
-By default, Replit runs the `dev` script, but you can configure it by changing the `run` field in the [configuration file](#.replit). Here are the vite docs for [serving production websites](https://vitejs.dev/guide/build.html)
-
-### Typescript
-
-Just rename any file from `.jsx` to `.tsx`. You can also try our [TypeScript Template](https://replit.com/@replit/React-TypeScript)
+Everything else is ice-cream for v1.1.
