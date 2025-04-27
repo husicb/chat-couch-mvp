@@ -1,0 +1,45 @@
+import Database from "@replit/database";
+import axios    from "axios";
+
+const db = new Database();
+const API = "https://api.spoonacular.com/recipes/parseIngredients";
+
+export async function logMeal({ raw }) {
+  /* 1️⃣  call Spoonacular – POST form-urlencoded */
+  const form = new URLSearchParams({
+    ingredientList: raw,
+    servings: 1,
+    includeNutrition: true
+  });
+
+  const { data } = await axios.post(
+    `${API}?apiKey=${process.env.SPOONACULAR_KEY}`,
+    form.toString(),
+    { headers: { "Content-Type": "application/x-www-form-urlencoded" } }
+  );
+
+  const n = data[0].nutrition.nutrients;
+  const pick = name => n.find(x => x.name === name)?.amount || 0;
+
+  const macros = {
+    protein: pick("Protein"),
+    carbs:   pick("Carbohydrates"),
+    fat:     pick("Fat"),
+    kcal:    pick("Calories")
+  };
+  /* 2️⃣  persist to Replit DB */
+  const today = new Date().toISOString().slice(0, 10);
+
+    let meals = await db.get(today);
+    if (!Array.isArray(meals)) meals = [];
+
+  meals.push({ raw, macros });
+  await db.set(today, meals);
+
+  /* 3️⃣  return confirmation */
+  return {
+    confirmation:
+      `Logged “${raw}” → P ${macros.protein} g / ` +
+      `C ${macros.carbs} g / F ${macros.fat} g (${macros.kcal} kcal)`
+  };
+}
