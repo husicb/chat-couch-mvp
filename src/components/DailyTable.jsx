@@ -38,7 +38,7 @@ export default function DailyTable({ date }) {
             {(data.workouts || []).map((w,i) =>
               <Row key={i}
                    c1={i+1}
-                   c2={`${w.name} ${w.sets}×${w.reps}@${w.weight}lb`}
+                   c2={`${w.exercise} ${w.sets}×${w.reps}@${w.weight}lb`}
                    c3={`${w.sets*w.reps*w.weight} lb`} />)}
           </tbody>
         </table>
