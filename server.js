@@ -4,6 +4,7 @@ import bodyParser from "body-parser";
 import { openai, assistantId } from "./openai/assistant.js";
 import { logMeal }             from "./functions/logMeal.js";
 import Database from "@replit/database"; 
+import logWorkout from "./functions/logWorkout.js";
 const db = new Database();                
 
 const app = express();
@@ -93,31 +94,14 @@ const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => console.log("API listening on", PORT));
 
 // ─── logWorkout function ──────────────────────────────────────
-function parseWorkoutInput(rawText) {
-  const regex = /^(.+?)\s+(\d+)x(\d+)\s+(\d+)\s*lbs?$/i;
-  const match = rawText.match(regex);
-
-  if (!match) throw new Error("❌ Invalid format. Use: 'Exercise 3x10 135lbs'");
-
-  return {
-    exercise: match[1].trim(),
-    sets: parseInt(match[2]),
-    reps: parseInt(match[3]),
-    weight: parseInt(match[4])
-  };
-}
-
-async function logWorkout(rawInput) {
-  const parsed = parseWorkoutInput(rawInput);
-  const today  = new Date().toISOString().slice(0, 10); 
-
-  const workouts = (await db.get(`${today}:w`)) || [];
-  workouts.push({
-    ...parsed,
-    loggedAt: new Date().toISOString()
-  });
-
-  await db.set(`${today}:w`, workouts);
-
-  return `✅ Logged ${parsed.exercise} ${parsed.sets}x${parsed.reps} at ${parsed.weight}lbs`;
+if (text.toLowerCase().startsWith("/log workout")) {
+  const raw  = text.replace(/^\/log workout\s*/i, "").trim();
+  const date = new Date().toISOString().slice(0,10);
+  try {
+    const reply = await logWorkout({ raw, date });
+    return res.json({ reply });
+  } catch (err) {
+    console.error(err);
+    return res.status(400).json({ error: err.message });
+  }
 }
