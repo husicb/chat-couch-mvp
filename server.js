@@ -93,15 +93,15 @@ app.post("/api/message", async (req, res) => {
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => console.log("API listening on", PORT));
 
-// ─── logWorkout function ──────────────────────────────────────
-if (text.toLowerCase().startsWith("/log workout")) {
-  const raw  = text.replace(/^\/log workout\s*/i, "").trim();
-  const date = new Date().toISOString().slice(0,10);
-  try {
-    const reply = await logWorkout({ raw, date });
-    return res.json({ reply });
-  } catch (err) {
-    console.error(err);
-    return res.status(400).json({ error: err.message });
+/* Handle /log workout command */
+  if (text.toLowerCase().startsWith("/log workout")) {
+    const raw  = text.replace(/^\/log workout\s*/i, "").trim();
+    const date = new Date().toISOString().slice(0,10);
+    try {
+      const reply = await logWorkout({ raw, date });
+      return res.json({ reply });
+    } catch (err) {
+      console.error(err);
+      return res.status(400).json({ error: err.message });
+    }
   }
-}
