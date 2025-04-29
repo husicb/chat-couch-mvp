@@ -21,7 +21,7 @@ export default function DailyTable({ date }) {
         <table className="w-full text-left">
           <thead><tr className="border-b"><th>#</th><th>Meal</th><th>Macros</th></tr></thead>
           <tbody>
-            {data.meals.map((m,i) =>
+            {(data.meals || []).map((m,i) =>
               <Row key={i}
                    c1={i+1}
                    c2={m.raw}
@@ -35,7 +35,7 @@ export default function DailyTable({ date }) {
         <table className="w-full text-left">
           <thead><tr className="border-b"><th>#</th><th>Lift</th><th>Volume</th></tr></thead>
           <tbody>
-            {data.workouts.map((w,i) =>
+            {(data.workouts || []).map((w,i) =>
               <Row key={i}
                    c1={i+1}
                    c2={`${w.name} ${w.sets}×${w.reps}@${w.weight}lb`}
