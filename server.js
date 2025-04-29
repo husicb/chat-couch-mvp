@@ -20,6 +20,7 @@ app.get("/api/day", async (req, res) => {
   if (!Array.isArray(meals))    meals    = [];
   if (!Array.isArray(workouts)) workouts = [];
 
+  console.log('Sending data:', { meals, workouts });
   res.json({ meals, workouts });
 });
 

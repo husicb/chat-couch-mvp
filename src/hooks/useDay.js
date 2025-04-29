@@ -14,7 +14,10 @@ export default function useDay(date) {
         if (!r.ok) throw new Error(`HTTP ${r.status}`);
         return r.json();
       })
-      .then(j => { if (!ignore) setData(j); })
+      .then(j => { 
+        console.log('API Response:', j);
+        if (!ignore) setData(j); 
+      })
       .catch(e => { if (!ignore) setErr(e); });
 
     return () => { ignore = true };
