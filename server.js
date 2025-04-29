@@ -12,9 +12,11 @@ app.use(bodyParser.json());
 // ─── dashboard route ──────────────────────────────────────
 app.get("/api/day", async (req, res) => {
   const date = req.query.date || new Date().toISOString().slice(0, 10);   // yyyy-mm-dd
+  console.log('Fetching data for date:', date);
   
   let meals    = await db.get(date)        || [];
   let workouts = await db.get(`${date}:w`) || [];
+  console.log('Retrieved meals:', meals);
 
   // ⬇️ guarantee they’re arrays
   if (!Array.isArray(meals))    meals    = [];
