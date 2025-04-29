@@ -13,12 +13,16 @@ app.use(bodyParser.json());
 app.get("/api/day", async (req, res) => {
   const date = req.query.date || new Date().toISOString().slice(0, 10);   // yyyy-mm-dd
   console.log('Fetching data for date:', date);
-  
-  let meals    = await db.get(date)        || [];
-  let workouts = await db.get(`${date}:w`) || [];
+
+  let meals    = await db.get(date);
+  let workouts = await db.get(`${date}:w`);
   console.log('Retrieved meals:', meals);
 
-  // ⬇️ guarantee they’re arrays
+  // Handle Replit DB response format
+  meals = (meals && meals.value) || [];
+  workouts = (workouts && workouts.value) || [];
+
+  // ⬇️ guarantee they're arrays
   if (!Array.isArray(meals))    meals    = [];
   if (!Array.isArray(workouts)) workouts = [];
 
