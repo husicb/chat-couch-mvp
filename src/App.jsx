@@ -1,17 +1,18 @@
 import { useState } from "react";
-import Dashboard from "./components/Dashboard";  // 🆕 import DailyTable
+import Dashboard from "./components/Dashboard";
 import "./App.css";
 
 export default function App() {
   const [input, setInput]       = useState("");
   const [messages, setMessages] = useState([]);
-  const [showTable, setShow]     = useState(false);  // 🆕 toggle for table
+  const [showTable, setShow]    = useState(false);
 
   const send = async () => {
     if (!input.trim()) return;
 
     setMessages(m => [...m, { from: "you", text: input }]);
 
+    // /summary command
     if (input.trim().toLowerCase() === "/summary") {
       try {
         const today = new Date().toISOString().slice(0, 10);
@@ -30,6 +31,8 @@ export default function App() {
       setInput("");
       return;
     }
+
+    // /parse log command
     if (input.trim().toLowerCase().startsWith("/parse log")) {
       const rawText = input.replace(/^\/parse log\s*/i, "").trim();
       try {
@@ -53,7 +56,6 @@ export default function App() {
           ...m,
           { from: "bot", text: `${lines}${totalLine}`.split("\n") }
         ]);
-
       } catch (err) {
         console.error(err);
         setMessages(m => [...m, { from: "bot", text: "⚠️ Error parsing log" }]);
@@ -63,8 +65,7 @@ export default function App() {
       return;
     }
 
-
-    // Fallback to normal POST /api/message
+    // Fallback: send to assistant
     try {
       const r = await fetch("/api/message", {
         method: "POST",
@@ -78,16 +79,28 @@ export default function App() {
         { from: "bot", text: data.reply || `⚠️ ${data.error}` }
       ]);
     } catch (err) {
-      setMessages(m => [...m, { from: "bot", text: "⚠️ network error" }]);
       console.error(err);
+      setMessages(m => [...m, { from: "bot", text: "⚠️ network error" }]);
     }
 
     setInput("");
   };
 
+  const CommandHelp = () => (
+    <div className="text-sm p-2 bg-gray-100 border rounded mb-2">
+      <strong>Commands:</strong><br />
+      • <code>/log meal 3 eggs and toast</code><br />
+      • <code>/log workout bench 3x10 135lbs</code><br />
+      • <code>/summary</code><br />
+      • <code>/parse log</code> ← paste full day<br />
+      • <code>/parse log @YYYY-MM-DD</code> ← log for another date
+    </div>
+  );
 
   const ChatUI = (
     <div className="chat">
+      <CommandHelp />
+
       <div className="msgs">
         {messages.map((m, i) => (
           <div key={i} className={m.from}>
@@ -97,8 +110,8 @@ export default function App() {
               : m.text}
           </div>
         ))}
-
       </div>
+
       <input
         value={input}
         onChange={e => setInput(e.target.value)}
@@ -118,9 +131,8 @@ export default function App() {
         {showTable ? "Chat" : "Today"}
       </button>
 
-      {showTable
-        ? <Dashboard />
-        : ChatUI}
+      {showTable ? <Dashboard /> : ChatUI}
     </>
   );
 }
+
