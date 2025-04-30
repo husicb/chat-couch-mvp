@@ -10,16 +10,35 @@ export default function App() {
   const send = async () => {
     if (!input.trim()) return;
 
-    // show your own message immediately
     setMessages(m => [...m, { from: "you", text: input }]);
 
+    if (input.trim().toLowerCase() === "/summary") {
+      try {
+        const today = new Date().toISOString().slice(0, 10);
+        const r = await fetch(`/api/day?date=${today}`);
+        const j = await r.json();
+
+        setMessages(m => [
+          ...m,
+          { from: "bot", text: j.summary || "⚠️ No summary available" }
+        ]);
+      } catch (err) {
+        console.error(err);
+        setMessages(m => [...m, { from: "bot", text: "⚠️ Error fetching summary" }]);
+      }
+
+      setInput("");
+      return;
+    }
+
+    // Fallback to normal POST /api/message
     try {
       const r = await fetch("/api/message", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ text: input })
       });
-      const data = await r.json(); // always JSON
+      const data = await r.json();
 
       setMessages(m => [
         ...m,
@@ -32,6 +51,7 @@ export default function App() {
 
     setInput("");
   };
+
 
   const ChatUI = (
     <div className="chat">

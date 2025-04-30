@@ -28,7 +28,42 @@ app.get("/api/day", async (req, res) => {
   if (!Array.isArray(workouts)) workouts = [];
 
   console.log('Sending data:', { meals, workouts });
-  res.json({ meals, workouts });
+  const totalMacros = meals.reduce(
+    (acc, m) => {
+      acc.protein += m.macros.protein || 0;
+      acc.carbs   += m.macros.carbs || 0;
+      acc.fat     += m.macros.fat || 0;
+      acc.kcal    += m.macros.kcal || 0;
+      return acc;
+    },
+    { protein: 0, carbs: 0, fat: 0, kcal: 0 }
+  );
+
+  const totalVolume = workouts.reduce(
+    (acc, w) => acc + (w.sets * w.reps * w.weight), 0
+  );
+
+  const caloriesBurned = Math.round(totalVolume * 0.1);  // rough estimate
+
+  const kpiSummary = {
+    proteinGoal: 160,
+    proteinHit: totalMacros.protein >= 160
+  };
+
+  const summary = `
+  🥗 Macros: ${totalMacros.protein}g P, ${totalMacros.carbs}g C, ${totalMacros.fat}g F (${totalMacros.kcal} kcal)
+  🏋️ Volume: ${totalVolume} lbs lifted (~${caloriesBurned} kcal burned)
+  🎯 Protein goal: ${kpiSummary.proteinHit ? "✅ Hit" : "❌ Missed"}
+  `;
+
+  res.json({
+    meals,
+    workouts,
+    totals: { macros: totalMacros, caloriesBurned, volume: totalVolume },
+    kpis: kpiSummary,
+    summary
+  });
+
 });
 
 // ---------- POST  /api/message ---------------------------------
