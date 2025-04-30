@@ -1,5 +1,5 @@
 import { useState } from "react";
-import DailyTable from "./components/DailyTable";  // 🆕 import DailyTable
+import Dashboard from "./components/Dashboard";  // 🆕 import DailyTable
 import "./App.css";
 
 export default function App() {
@@ -82,7 +82,7 @@ export default function App() {
       </button>
 
       {showTable
-        ? <DailyTable />
+        ? <Dashboard />
         : ChatUI}
     </>
   );

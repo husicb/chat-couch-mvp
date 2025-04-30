@@ -126,5 +126,78 @@ app.post("/api/message", async (req, res) => {
 });
 // ----------------------------------------------------------------
 
+app.get("/api/dashboard", async (req, res) => {
+  const range = req.query.range || "day";
+  const today = new Date();
+  const dbKeys = [];
+
+  // Calculate range keys
+  if (range === "day") {
+    const key = today.toISOString().slice(0, 10);
+    dbKeys.push(key);
+  }
+
+  if (range === "week") {
+    for (let i = 0; i < 7; i++) {
+      const d = new Date();
+      d.setDate(today.getDate() - i);
+      dbKeys.push(d.toISOString().slice(0, 10));
+    }
+  }
+
+  if (range === "month") {
+    for (let i = 0; i < 30; i++) {
+      const d = new Date();
+      d.setDate(today.getDate() - i);
+      dbKeys.push(d.toISOString().slice(0, 10));
+    }
+  }
+
+  const days = [];
+
+  let totalProtein = 0, totalKcal = 0, totalVolume = 0;
+
+  for (const key of dbKeys) {
+    let meals = await db.get(key);
+    let workouts = await db.get(`${key}:w`);
+
+    meals = (meals && meals.value) || [];
+    workouts = (workouts && workouts.value) || [];
+
+    if (!Array.isArray(meals)) meals = [];
+    if (!Array.isArray(workouts)) workouts = [];
+
+    const protein = meals.reduce((a, m) => a + (m.macros.protein || 0), 0);
+    const kcal    = meals.reduce((a, m) => a + (m.macros.kcal || 0), 0);
+    const volume  = workouts.reduce((a, w) => a + (w.sets * w.reps * w.weight), 0);
+
+    totalProtein += protein;
+    totalKcal    += kcal;
+    totalVolume  += volume;
+
+    days.push({
+      date: key,
+      meals,
+      workouts,
+      kpis: {
+        protein: protein,
+        kcal: kcal,
+        volume: volume,
+        proteinHit: protein >= 160
+      }
+    });
+
+  }
+
+  res.json({
+    days,
+    totals: {
+      protein: totalProtein,
+      kcal: totalKcal,
+      volume: totalVolume
+    }
+  });
+});
+
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => console.log("API listening on", PORT));
