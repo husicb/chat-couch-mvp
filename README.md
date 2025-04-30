@@ -4,39 +4,38 @@
 
 ---
 
-## Product Promise
+## 🚀 Product Promise
 
-For people who already talk to AI about their meals and workouts, **Chat-Coach** is a lightweight web app that feels exactly like texting your own assistant.  
-Type one line to log a meal or workout and get instant macros, KPIs, and a daily PDF summary—no spreadsheets, no clunky fitness UI.
-
----
-
-## Day-7 Launch Must-Haves 🚀
-
-| # | User story | Example slash-command |
-|---|------------|-----------------------|
-| 1 | **Log a meal** | `/log meal 3 eggs and oatmeal` |
-| 2 | **Log a workout** | `/log workout bench 5x5 185` |
-| 3 | **Ask today’s progress** | `/summary today` |
-| 4 | **Download daily report** | One-click PDF export |
-
-Everything else is ice-cream for v1.1.
+For people who already talk to AI about their meals and workouts, **Chat-Coach** is a lightweight web app that feels like texting your personal assistant.  
+Type one line to log a meal or workout and get instant macros, KPIs, and a daily summary—no spreadsheets, no clunky UI.
 
 ---
 
-## Tech Stack (MVP)
+## 🛠 Day-7 Launch Features
 
-| Layer | Choice | Why |
-|-------|--------|-----|
-| Chat UI | React + Vite | Fast & light |
-| AI brain | OpenAI Assistants API | Handles chat history + function calls |
-| Data store | Replit DB | Zero-config key-value for early stage |
-| Nutrition | Spoonacular REST | Quick macros lookup |
-| PDF | jsPDF + html2canvas | Client-side export |
+| # | Feature | Example Command |
+|---|---------|------------------|
+| 1 | Log a meal | `/log meal 3 eggs and toast` |
+| 2 | Log a workout | `/log workout bench 5x5 185` |
+| 3 | Get daily KPIs | `/summary` |
+| 4 | View dashboard | Toggle → "Today" |
+| 5 | Parse full-day log | `/parse log 4 eggs. Chipotle bowl. Protein shake` |
 
 ---
 
-## Run Locally (dev)
+## 📊 Tech Stack
+
+| Layer | Tool | Why |
+|-------|------|-----|
+| Chat UI | React + Vite | Fast, fluid UX |
+| AI | OpenAI Assistants API | Handles natural inputs |
+| Nutrition | Spoonacular API | Parses ingredients into macros |
+| Storage | Replit DB | Simple, persistent key-value store |
+| PDF (coming soon) | jsPDF + html2canvas | Export daily logs (v1.1) |
+
+---
+
+## 🧪 Run Locally
 
 ```bash
 # 1. clone & install
@@ -44,18 +43,26 @@ git clone https://github.com/husicb/chat-coach-mvp.git
 cd chat-coach-mvp && npm install
 
 # 2. add secrets
-cp .env.example .env  # then fill OPENAI_API_KEY, SPOONACULAR_KEY, REPLIT_DB_URL
+cp .env.example .env  # fill in OPENAI_API_KEY, SPOONACULAR_KEY, REPLIT_DB_URL
 
-# 3. start dev server
+# 3. run dev server
 npm run dev
-```
+```  
 
-## Build Logs
+## 📓 Build Logs
+Day 4 – 2025-04-29
 
-**Day 0 (2025-04-26):** Repl scaffolded, GitHub repo live, Issues board with 4 MVP cards.  
-Tweet → https://x.com/your-tweet-url
+✅ Closed Issue #5 — built mini dashboard with daily/weekly/monthly toggle
 
-(daily updates will be appended here)
+✅ Closed Issue #6 — created /parse log endpoint to handle full-day meal inputs
+
+✅ Updated Chat UI to render multi-line responses and show total macros
+
+✅ Refactored logMeal() to return macro data for reuse
+
+✅ Reorganized frontend state flow for toggles + chat integration
+
+
 
 ## License
 
