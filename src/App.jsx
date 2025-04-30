@@ -30,6 +30,39 @@ export default function App() {
       setInput("");
       return;
     }
+    if (input.trim().toLowerCase().startsWith("/parse log")) {
+      const rawText = input.replace(/^\/parse log\s*/i, "").trim();
+      try {
+        const r = await fetch("/api/parse-log", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ text: rawText })
+        });
+        const data = await r.json();
+
+        const lines = data.results.map(m =>
+          m.error
+            ? `❌ ${m.raw} – ${m.error}`
+            : `✅ ${m.raw} → P ${m.macros.protein}g / C ${m.macros.carbs}g / F ${m.macros.fat}g (${m.macros.kcal} kcal)`
+        ).join("\n");
+
+        const totalLine =
+          `\n**Total:** ${data.total.protein}g P • ${data.total.carbs}g C • ${data.total.fat}g F (${data.total.kcal} kcal)`;
+
+        setMessages(m => [
+          ...m,
+          { from: "bot", text: `${lines}${totalLine}`.split("\n") }
+        ]);
+
+      } catch (err) {
+        console.error(err);
+        setMessages(m => [...m, { from: "bot", text: "⚠️ Error parsing log" }]);
+      }
+
+      setInput("");
+      return;
+    }
+
 
     // Fallback to normal POST /api/message
     try {
@@ -58,9 +91,13 @@ export default function App() {
       <div className="msgs">
         {messages.map((m, i) => (
           <div key={i} className={m.from}>
-            <b>{m.from}:</b> {m.text}
+            <b>{m.from}:</b>{" "}
+            {Array.isArray(m.text)
+              ? m.text.map((line, j) => <div key={j}>{line}</div>)
+              : m.text}
           </div>
         ))}
+
       </div>
       <input
         value={input}

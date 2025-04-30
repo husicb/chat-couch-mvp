@@ -36,11 +36,9 @@ export async function logMeal({ raw, date }) {
 
   meals.push({ raw, macros });
   await db.set(key, meals);
-
-  /* 3️⃣  return confirmation */
+  
   return {
-    confirmation:
-      `✅ Logged “${raw}” → P ${macros.protein} g / ` +
-      `C ${macros.carbs} g / F ${macros.fat} g (${macros.kcal} kcal)`
+    confirmation: `✅ Logged “${raw}”`,
+    macros
   };
 }

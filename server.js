@@ -125,6 +125,42 @@ app.post("/api/message", async (req, res) => {
   }
 });
 // ----------------------------------------------------------------
+app.post("/api/parse-log", async (req, res) => {
+  const { text = "" } = req.body;
+  const date = new Date().toISOString().slice(0, 10);
+
+  // Split log into separate meal entries (by newlines or periods)
+  const lines = text
+    .split(/[\n.]+/)
+    .map(line => line.trim())
+    .filter(Boolean);
+
+  const results = [];
+  let total = { protein: 0, carbs: 0, fat: 0, kcal: 0 };
+
+  for (const line of lines) {
+    try {
+      const out = await logMeal({ raw: line, date });
+
+      total.protein += out.macros.protein || 0;
+      total.carbs   += out.macros.carbs   || 0;
+      total.fat     += out.macros.fat     || 0;
+      total.kcal    += out.macros.kcal    || 0;
+
+      results.push({
+        raw: line,
+        macros: out.macros
+      });
+    } catch (err) {
+      results.push({
+        raw: line,
+        error: err.message || "Failed to parse"
+      });
+    }
+  }
+
+  res.json({ results, total });
+});
 
 app.get("/api/dashboard", async (req, res) => {
   const range = req.query.range || "day";
