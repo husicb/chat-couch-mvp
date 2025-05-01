@@ -1,11 +1,9 @@
-import Database from "@replit/database";
 import axios from "axios";
+import { db, read } from "../src/utils/db.js";
 
-const db = new Database();
 const API = "https://api.spoonacular.com/recipes/parseIngredients";
 
 export async function logMeal({ raw, date }) {
-  // 1️⃣ Call Spoonacular – POST form-urlencoded
   const form = new URLSearchParams({
     ingredientList: raw,
     servings: 1,
@@ -28,19 +26,15 @@ export async function logMeal({ raw, date }) {
     kcal: pick("Calories"),
   };
 
-  // 2️⃣ Persist to Replit DB
-  const key = new Date(date).toISOString().slice(0, 10); // yyyy-mm-dd
-  let result = await db.get(key);
-  let meals = (result && result.value) || [];
+  const key = new Date(date).toISOString().slice(0, 10);
+  let meals = await read(key);
   if (!Array.isArray(meals)) meals = [];
 
   meals.push({ raw, macros });
   await db.set(key, meals);
 
-  // 3️⃣ Return confirmation with date
   return {
     confirmation: `✅ Logged “${raw}” for ${key}`,
     macros,
   };
 }
-

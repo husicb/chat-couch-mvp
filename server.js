@@ -1,40 +1,31 @@
 // server.js (root of project)
 import { extractDatePrefixed } from "./src/utils/extractDate.js";
-import express    from "express";
+import express from "express";
 import bodyParser from "body-parser";
 import { openai, assistantId } from "./openai/assistant.js";
-import { logMeal }             from "./functions/logMeal.js";
-import Database from "@replit/database"; 
+import { logMeal } from "./functions/logMeal.js";
 import logWorkout from "./functions/logWorkout.js";
-const db = new Database();                
+import { db, read } from "./src/utils/db.js";
 
 const app = express();
 app.use(bodyParser.json());
 
 // ─── dashboard route ──────────────────────────────────────
 app.get("/api/day", async (req, res) => {
-  const date = req.query.date || new Date().toISOString().slice(0, 10);   // yyyy-mm-dd
+  const date = req.query.date || new Date().toISOString().slice(0, 10);
   console.log('Fetching data for date:', date);
 
-  let meals    = await db.get(date);
-  let workouts = await db.get(`${date}:w`);
+  let meals = await read(date);
+  let workouts = await read(`${date}:w`);
   console.log('Retrieved meals:', meals);
-
-  // Handle Replit DB response format
-  meals = (meals && meals.value) || [];
-  workouts = (workouts && workouts.value) || [];
-
-  // ⬇️ guarantee they're arrays
-  if (!Array.isArray(meals))    meals    = [];
-  if (!Array.isArray(workouts)) workouts = [];
 
   console.log('Sending data:', { meals, workouts });
   const totalMacros = meals.reduce(
     (acc, m) => {
       acc.protein += m.macros.protein || 0;
-      acc.carbs   += m.macros.carbs || 0;
-      acc.fat     += m.macros.fat || 0;
-      acc.kcal    += m.macros.kcal || 0;
+      acc.carbs += m.macros.carbs || 0;
+      acc.fat += m.macros.fat || 0;
+      acc.kcal += m.macros.kcal || 0;
       return acc;
     },
     { protein: 0, carbs: 0, fat: 0, kcal: 0 }
@@ -44,8 +35,7 @@ app.get("/api/day", async (req, res) => {
     (acc, w) => acc + (w.sets * w.reps * w.weight), 0
   );
 
-  const caloriesBurned = Math.round(totalVolume * 0.1);  // rough estimate
-
+  const caloriesBurned = Math.round(totalVolume * 0.1);
   const kpiSummary = {
     proteinGoal: 160,
     proteinHit: totalMacros.protein >= 160
@@ -64,7 +54,6 @@ app.get("/api/day", async (req, res) => {
   🎯 Protein goal: ${kpiSummary.proteinHit ? "✅ Hit" : "❌ Missed"}
   `;
 
-
   res.json({
     meals,
     workouts,
@@ -72,14 +61,11 @@ app.get("/api/day", async (req, res) => {
     kpis: kpiSummary,
     summary
   });
-
 });
 
-// ---------- POST  /api/message ---------------------------------
 app.post("/api/message", async (req, res) => {
   const { text = "" } = req.body;
 
-  /* 1. Handle slash-commands directly ------------------------- */
   if (text.toLowerCase().startsWith("/log meal")) {
     const { date, cleaned } = extractDatePrefixed(
       text.replace(/^\/log meal\s*/i, "")
@@ -93,7 +79,6 @@ app.post("/api/message", async (req, res) => {
       return res.status(500).json({ error: err.message || "logMeal failed" });
     }
   }
-
 
   if (text.toLowerCase().startsWith("/log workout")) {
     const { date, cleaned } = extractDatePrefixed(
@@ -109,8 +94,6 @@ app.post("/api/message", async (req, res) => {
     }
   }
 
-
-  /* 2. Otherwise → pass through Assistant -------------------- */
   try {
     const thread = await openai.beta.threads.create();
     await openai.beta.threads.messages.create(thread.id, {
@@ -131,7 +114,7 @@ app.post("/api/message", async (req, res) => {
       return res.status(501).json({ error: "tool not implemented yet" });
     }
 
-    const msgs  = await openai.beta.threads.messages.list(thread.id);
+    const msgs = await openai.beta.threads.messages.list(thread.id);
     const reply = msgs.data[0].content[0].text.value;
     res.json({ reply });
   } catch (err) {
@@ -139,12 +122,11 @@ app.post("/api/message", async (req, res) => {
     res.status(500).json({ error: err.message || "assistant error" });
   }
 });
-// ----------------------------------------------------------------
+
 app.post("/api/parse-log", async (req, res) => {
   const { text = "" } = req.body;
   const date = new Date().toISOString().slice(0, 10);
 
-  // Split log into separate meal entries (by newlines or periods)
   const lines = text
     .split(/[\n.]+/)
     .map(line => line.trim())
@@ -156,21 +138,13 @@ app.post("/api/parse-log", async (req, res) => {
   for (const line of lines) {
     try {
       const out = await logMeal({ raw: line, date });
-
       total.protein += out.macros.protein || 0;
-      total.carbs   += out.macros.carbs   || 0;
-      total.fat     += out.macros.fat     || 0;
-      total.kcal    += out.macros.kcal    || 0;
-
-      results.push({
-        raw: line,
-        macros: out.macros
-      });
+      total.carbs += out.macros.carbs || 0;
+      total.fat += out.macros.fat || 0;
+      total.kcal += out.macros.kcal || 0;
+      results.push({ raw: line, macros: out.macros });
     } catch (err) {
-      results.push({
-        raw: line,
-        error: err.message || "Failed to parse"
-      });
+      results.push({ raw: line, error: err.message || "Failed to parse" });
     }
   }
 
@@ -182,12 +156,9 @@ app.get("/api/dashboard", async (req, res) => {
   const today = new Date();
   const dbKeys = [];
 
-  // Calculate range keys
   if (range === "day") {
-    const key = today.toISOString().slice(0, 10);
-    dbKeys.push(key);
+    dbKeys.push(today.toISOString().slice(0, 10));
   }
-
   if (range === "week") {
     for (let i = 0; i < 7; i++) {
       const d = new Date();
@@ -195,7 +166,6 @@ app.get("/api/dashboard", async (req, res) => {
       dbKeys.push(d.toISOString().slice(0, 10));
     }
   }
-
   if (range === "month") {
     for (let i = 0; i < 30; i++) {
       const d = new Date();
@@ -205,39 +175,31 @@ app.get("/api/dashboard", async (req, res) => {
   }
 
   const days = [];
-
   let totalProtein = 0, totalKcal = 0, totalVolume = 0;
 
   for (const key of dbKeys) {
-    let meals = await db.get(key);
-    let workouts = await db.get(`${key}:w`);
-
-    meals = (meals && meals.value) || [];
-    workouts = (workouts && workouts.value) || [];
-
-    if (!Array.isArray(meals)) meals = [];
-    if (!Array.isArray(workouts)) workouts = [];
+    let meals = await read(key);
+    let workouts = await read(`${key}:w`);
 
     const protein = meals.reduce((a, m) => a + (m.macros.protein || 0), 0);
-    const kcal    = meals.reduce((a, m) => a + (m.macros.kcal || 0), 0);
-    const volume  = workouts.reduce((a, w) => a + (w.sets * w.reps * w.weight), 0);
+    const kcal = meals.reduce((a, m) => a + (m.macros.kcal || 0), 0);
+    const volume = workouts.reduce((a, w) => a + (w.sets * w.reps * w.weight), 0);
 
     totalProtein += protein;
-    totalKcal    += kcal;
-    totalVolume  += volume;
+    totalKcal += kcal;
+    totalVolume += volume;
 
     days.push({
       date: key,
       meals,
       workouts,
       kpis: {
-        protein: protein,
-        kcal: kcal,
-        volume: volume,
+        protein,
+        kcal,
+        volume,
         proteinHit: protein >= 160
       }
     });
-
   }
 
   res.json({
@@ -249,8 +211,6 @@ app.get("/api/dashboard", async (req, res) => {
     }
   });
 });
-
-const PORT = process.env.PORT || 3000;
 
 app.get("/api/debug-db", async (req, res) => {
   const keysRes = await fetch(`${process.env.REPLIT_DB_URL}?prefix=`);
@@ -271,4 +231,5 @@ app.get("/api/debug-db", async (req, res) => {
   res.json({ keys: keys.length, data: dbDump });
 });
 
+const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => console.log("API listening on", PORT));
