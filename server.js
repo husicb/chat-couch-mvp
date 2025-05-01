@@ -73,15 +73,17 @@ app.post("/api/message", async (req, res) => {
   /* 1. Handle slash-commands directly ------------------------- */
   if (text.toLowerCase().startsWith("/log meal")) {
     const raw  = text.replace(/^\/log meal\s*/i, "").trim();
-    const date = new Date().toISOString().slice(0,10);        
+    const date = new Date().toISOString().slice(0,10);  // ✅ Fix added here
+
     try {
-      const out = await logMeal({ raw, date });                
-      return res.json({ reply: out.confirmation });         
+      const out = await logMeal({ raw, date });
+      return res.json({ reply: out.confirmation });
     } catch (err) {
       console.error(err);
       return res.status(500).json({ error: err.message || "logMeal failed" });
     }
   }
+
 
   if (text.toLowerCase().startsWith("/log workout")) {
     const raw = text.replace(/^\/log workout\s*/i, "").trim();
@@ -236,4 +238,24 @@ app.get("/api/dashboard", async (req, res) => {
 });
 
 const PORT = process.env.PORT || 3000;
+
+app.get("/api/debug-db", async (req, res) => {
+  const keysRes = await fetch(`${process.env.REPLIT_DB_URL}?prefix=`);
+  const keysRaw = await keysRes.text();
+  const keys = keysRaw.split("\n").filter(Boolean);
+
+  const dbDump = {};
+  for (const key of keys) {
+    const valueRes = await fetch(`${process.env.REPLIT_DB_URL}/${key}`);
+    const valRaw = await valueRes.text();
+    try {
+      dbDump[key] = JSON.parse(valRaw);
+    } catch (e) {
+      dbDump[key] = valRaw;
+    }
+  }
+
+  res.json({ keys: keys.length, data: dbDump });
+});
+
 app.listen(PORT, () => console.log("API listening on", PORT));

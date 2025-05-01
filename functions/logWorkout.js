@@ -11,10 +11,12 @@ function parseWorkout(raw) {
 }
 
 export default async function logWorkout({ raw, date }) {
-  const w  = { ...parseWorkout(raw), loggedAt:new Date().toISOString() };
+  const w = { ...parseWorkout(raw), loggedAt: new Date().toISOString() };
 
-  const key = `${date}:w`;                 // workouts share the :w suffix
-  let workouts = await db.get(key) || [];
+  const key = `${date}:w`;
+
+  const result = await db.get(key);
+  let workouts = (result && result.value) || [];
   if (!Array.isArray(workouts)) workouts = [];
 
   workouts.push(w);

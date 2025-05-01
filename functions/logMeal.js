@@ -31,7 +31,8 @@ export async function logMeal({ raw, date }) {
 
   /* 2️⃣  persist to Replit DB */
   const key = new Date(date).toISOString().slice(0, 10);  // ensure yyyy-mm-dd format
-  let meals = await db.get(key);
+  let result = await db.get(key);
+  let meals = (result && result.value) || [];
   if (!Array.isArray(meals)) meals = [];
 
   meals.push({ raw, macros });
