@@ -22,5 +22,5 @@ export default async function logWorkout({ raw, date }) {
   workouts.push(w);
   await db.set(key, workouts);
 
-  return `✅ Logged ${w.exercise} ${w.sets}×${w.reps} @ ${w.weight} lb`;
+  return `✅ Logged ${w.exercise} ${w.sets}×${w.reps} @ ${w.weight} lb for ${key}`;
 }

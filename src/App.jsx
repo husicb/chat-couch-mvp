@@ -35,8 +35,12 @@ export default function App() {
     // /parse log command
     if (input.trim().toLowerCase().startsWith("/parse log")) {
       const rawText = input.replace(/^\/parse log\s*/i, "").trim();
+
+      setMessages(m => [...m, { from: "bot", text: "⏳ Parsing log..." }]);
+
       try {
         const r = await fetch("/api/parse-log", {
+
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ text: rawText })
@@ -66,6 +70,7 @@ export default function App() {
     }
 
     // Fallback: send to assistant
+    setMessages(m => [...m, { from: "bot", text: "⏳ Parsing log..." }]);
     try {
       const r = await fetch("/api/message", {
         method: "POST",

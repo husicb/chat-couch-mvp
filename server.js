@@ -51,11 +51,19 @@ app.get("/api/day", async (req, res) => {
     proteinHit: totalMacros.protein >= 160
   };
 
+  const mealList = meals.length
+    ? meals.map(m => `- ${m.raw}`).join("\n")
+    : "No meals logged.";
+
   const summary = `
+  📋 Meals:
+  ${mealList}
+
   🥗 Macros: ${totalMacros.protein}g P, ${totalMacros.carbs}g C, ${totalMacros.fat}g F (${totalMacros.kcal} kcal)
   🏋️ Volume: ${totalVolume} lbs lifted (~${caloriesBurned} kcal burned)
   🎯 Protein goal: ${kpiSummary.proteinHit ? "✅ Hit" : "❌ Missed"}
   `;
+
 
   res.json({
     meals,
