@@ -1,4 +1,5 @@
 // server.js (root of project)
+import { extractDatePrefixed } from "./src/utils/extractDate.js";
 import express    from "express";
 import bodyParser from "body-parser";
 import { openai, assistantId } from "./openai/assistant.js";
@@ -72,11 +73,12 @@ app.post("/api/message", async (req, res) => {
 
   /* 1. Handle slash-commands directly ------------------------- */
   if (text.toLowerCase().startsWith("/log meal")) {
-    const raw  = text.replace(/^\/log meal\s*/i, "").trim();
-    const date = new Date().toISOString().slice(0,10);  // ✅ Fix added here
+    const { date, cleaned } = extractDatePrefixed(
+      text.replace(/^\/log meal\s*/i, "")
+    );
 
     try {
-      const out = await logMeal({ raw, date });
+      const out = await logMeal({ raw: cleaned, date });
       return res.json({ reply: out.confirmation });
     } catch (err) {
       console.error(err);
@@ -86,16 +88,19 @@ app.post("/api/message", async (req, res) => {
 
 
   if (text.toLowerCase().startsWith("/log workout")) {
-    const raw = text.replace(/^\/log workout\s*/i, "").trim();
-    const date = new Date().toISOString().slice(0,10);
+    const { date, cleaned } = extractDatePrefixed(
+      text.replace(/^\/log workout\s*/i, "")
+    );
+
     try {
-      const confirmation = await logWorkout({ raw, date });              
-      return res.json({ reply: confirmation });                
+      const confirmation = await logWorkout({ raw: cleaned, date });
+      return res.json({ reply: confirmation });
     } catch (err) {
       console.error(err);
       return res.status(500).json({ error: err.message || "logWorkout failed" });
     }
   }
+
 
   /* 2. Otherwise → pass through Assistant -------------------- */
   try {
