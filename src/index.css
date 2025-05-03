@@ -1,0 +1,16 @@
+/* src/index.css — ORDER MATTERS */
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+html {
+  font-family: 'Inter', ui-sans-serif, system-ui, sans-serif;
+  background: rgb(249 250 251);
+}
+
+body { margin: 0; line-height: 1.5; }
+main { padding: 2rem 1rem; }
+
